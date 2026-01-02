@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte Hall Problem Simulator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #2b2b2b;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .instruction {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            min-height: 50px;
+        }
+
+        .doors-container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .door-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .door {
+            width: 150px;
+            height: 150px;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 3px solid #555;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #8B4513;
+            color: white;
+        }
+
+        .door:hover:not(:disabled) {
+            transform: scale(1.05);
+            border-color: #888;
+        }
+
+        .door:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .door.selected {
+            background-color: #4169E1;
+            border-color: #4169E1;
+        }
+
+        .door.goat {
+            background-color: #CD5C5C;
+            border-color: #CD5C5C;
+        }
+
+        .door.car {
+            background-color: #32CD32;
+            border-color: #32CD32;
+        }
+
+        .door.car-missed {
+            background-color: #FFD700;
+            border-color: #FFD700;
+            color: #333;
+        }
+
+        .door-label {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-switch {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-switch:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .btn-stay {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-stay:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+
+        .btn-new {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .btn-new:hover {
+            background-color: #F57C00;
+        }
+
+        .btn-reset {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #d32f2f;
+        }
+
+        .section {
+            background-color: #3d3d3d;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background-color: #2b2b2b;
+            border-radius: 8px;
+            padding: 15px 30px;
+            min-width: 200px;
+        }
+
+        .stat-header {
+            padding: 8px;
+            margin: -15px -30px 15px -30px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+        }
+
+        .stat-header.switch {
+            background-color: #4CAF50;
+        }
+
+        .stat-header.stay {
+            background-color: #2196F3;
+        }
+
+        .stat-percent {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-percent.switch {
+            color: #4CAF50;
+        }
+
+        .stat-percent.stay {
+            color: #2196F3;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-detail {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .theory {
+            font-size: 0.9rem;
+            color: #888;
+            font-style: italic;
+        }
+
+        .sim-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sim-controls input {
+            width: 80px;
+            padding: 8px;
+            font-size: 1rem;
+            text-align: center;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: white;
+            color: black;
+        }
+
+        .sim-controls label {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .doors-container {
+                gap: 10px;
+            }
+
+            .door {
+                width: 100px;
+                height: 100px;
+                font-size: 1.3rem;
+            }
+
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .stat-box {
+                min-width: 180px;
+            }
+
+            .sim-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monte Hall Problem</h1>
+
+        <p class="instruction" id="instruction">Choose a door! Behind one door is a car, behind the others are goats.</p>
+
+        <div class="doors-container">
+            <div class="door-wrapper">
+                <button class="door" id="door0" onclick="doorClicked(0)">?</button>
+                <span class="door-label">Door 1</span>
+            </div>
+            <div class="door-wrapper">
+                <button class="door" id="door1" onclick="doorClicked(1)">?</button>
+                <span class="door-label">Door 2</span>
+            </div>
+            <div class="door-wrapper">
+                <button class="door" id="door2" onclick="doorClicked(2)">?</button>
+                <span class="door-label">Door 3</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-switch" id="btnSwitch" onclick="switchDoor()" disabled>SWITCH DOOR</button>
+            <button class="btn btn-stay" id="btnStay" onclick="stayDoor()" disabled>STAY</button>
+            <button class="btn btn-new" onclick="newGame()">NEW GAME</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Statistics</div>
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-header switch">SWITCH</div>
+                    <div class="stat-percent switch" id="switchPct">0.0%</div>
+                    <div class="stat-label">Win Car</div>
+                    <div class="stat-detail" id="switchDetail">0 / 0 games</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-header stay">STAY</div>
+                    <div class="stat-percent stay" id="stayPct">0.0%</div>
+                    <div class="stat-label">Win Car</div>
+                    <div class="stat-detail" id="stayDetail">0 / 0 games</div>
+                </div>
+            </div>
+            <p class="theory">Theory: Switch wins ~66.7% | Stay wins ~33.3%</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Auto-Simulate</div>
+            <div class="sim-controls">
+                <label>Run</label>
+                <input type="number" id="simCount" value="1000" min="1" max="100000">
+                <label>games:</label>
+                <button class="btn btn-switch" onclick="autoSimulate(true)">Always Switch</button>
+                <button class="btn btn-stay" onclick="autoSimulate(false)">Always Stay</button>
+                <button class="btn btn-reset" onclick="resetStats()">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let prizeDoor = null;
+        let playerChoice = null;
+        let revealedDoor = null;
+        let gamePhase = "choose";
+
+        // Statistics
+        let stats = {
+            switchWins: 0,
+            switchTotal: 0,
+            stayWins: 0,
+            stayTotal: 0
+        };
+
+        function newGame() {
+            prizeDoor = Math.floor(Math.random() * 3);
+            playerChoice = null;
+            revealedDoor = null;
+            gamePhase = "choose";
+
+            // Reset doors
+            for (let i = 0; i < 3; i++) {
+                const door = document.getElementById(`door${i}`);
+                door.textContent = "?";
+                door.className = "door";
+                door.disabled = false;
+            }
+
+            // Reset buttons
+            document.getElementById("btnSwitch").disabled = true;
+            document.getElementById("btnStay").disabled = true;
+
+            document.getElementById("instruction").textContent =
+                "Choose a door! Behind one door is a car, behind the others are goats.";
+        }
+
+        function doorClicked(doorNum) {
+            if (gamePhase !== "choose") return;
+
+            playerChoice = doorNum;
+            document.getElementById(`door${doorNum}`).classList.add("selected");
+
+            // Host reveals a goat
+            const possibleReveals = [0, 1, 2].filter(i => i !== playerChoice && i !== prizeDoor);
+            revealedDoor = possibleReveals[Math.floor(Math.random() * possibleReveals.length)];
+
+            const revealedDoorEl = document.getElementById(`door${revealedDoor}`);
+            revealedDoorEl.textContent = "GOAT";
+            revealedDoorEl.classList.add("goat");
+            revealedDoorEl.disabled = true;
+
+            // Disable all doors, enable action buttons
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`door${i}`).disabled = true;
+            }
+
+            document.getElementById("btnSwitch").disabled = false;
+            document.getElementById("btnStay").disabled = false;
+
+            gamePhase = "switch";
+
+            document.getElementById("instruction").textContent =
+                `Door ${revealedDoor + 1} has a goat! Do you want to SWITCH to the other door or STAY with Door ${playerChoice + 1}?`;
+        }
+
+        function switchDoor() {
+            const newChoice = [0, 1, 2].find(i => i !== playerChoice && i !== revealedDoor);
+            document.getElementById(`door${playerChoice}`).classList.remove("selected");
+            playerChoice = newChoice;
+            document.getElementById(`door${playerChoice}`).classList.add("selected");
+            revealResult(true);
+        }
+
+        function stayDoor() {
+            revealResult(false);
+        }
+
+        function revealResult(switched) {
+            gamePhase = "result";
+            document.getElementById("btnSwitch").disabled = true;
+            document.getElementById("btnStay").disabled = true;
+
+            const won = playerChoice === prizeDoor;
+
+            // Update statistics
+            if (switched) {
+                stats.switchTotal++;
+                if (won) stats.switchWins++;
+            } else {
+                stats.stayTotal++;
+                if (won) stats.stayWins++;
+            }
+
+            // Reveal all doors
+            for (let i = 0; i < 3; i++) {
+                const door = document.getElementById(`door${i}`);
+                if (i === prizeDoor) {
+                    door.textContent = "CAR";
+                    door.classList.remove("selected", "goat");
+                    door.classList.add(i === playerChoice ? "car" : "car-missed");
+                } else {
+                    door.textContent = "GOAT";
+                    door.classList.remove("selected");
+                    door.classList.add("goat");
+                }
+            }
+
+            const action = switched ? "switched" : "stayed";
+            const result = won ? "WON THE CAR!" : "GOT A GOAT!";
+            document.getElementById("instruction").textContent =
+                `You ${action} and ${result} Click 'New Game' to play again.`;
+
+            updateStatsDisplay();
+        }
+
+        function updateStatsDisplay() {
+            const switchRate = stats.switchTotal > 0
+                ? (stats.switchWins / stats.switchTotal * 100).toFixed(1)
+                : "0.0";
+            const stayRate = stats.stayTotal > 0
+                ? (stats.stayWins / stats.stayTotal * 100).toFixed(1)
+                : "0.0";
+
+            document.getElementById("switchPct").textContent = `${switchRate}%`;
+            document.getElementById("switchDetail").textContent = `${stats.switchWins} / ${stats.switchTotal} games`;
+
+            document.getElementById("stayPct").textContent = `${stayRate}%`;
+            document.getElementById("stayDetail").textContent = `${stats.stayWins} / ${stats.stayTotal} games`;
+        }
+
+        function autoSimulate(alwaysSwitch) {
+            const count = parseInt(document.getElementById("simCount").value) || 1000;
+
+            for (let i = 0; i < count; i++) {
+                const prize = Math.floor(Math.random() * 3);
+                const choice = Math.floor(Math.random() * 3);
+
+                const possibleReveals = [0, 1, 2].filter(j => j !== choice && j !== prize);
+                const revealed = possibleReveals[Math.floor(Math.random() * possibleReveals.length)];
+
+                if (alwaysSwitch) {
+                    const finalChoice = [0, 1, 2].find(j => j !== choice && j !== revealed);
+                    stats.switchTotal++;
+                    if (finalChoice === prize) stats.switchWins++;
+                } else {
+                    stats.stayTotal++;
+                    if (choice === prize) stats.stayWins++;
+                }
+            }
+
+            updateStatsDisplay();
+        }
+
+        function resetStats() {
+            stats = { switchWins: 0, switchTotal: 0, stayWins: 0, stayTotal: 0 };
+            updateStatsDisplay();
+        }
+
+        // Initialize game
+        newGame();
+    </script>
+</body>
+</html>
